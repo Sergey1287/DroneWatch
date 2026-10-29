@@ -8,7 +8,7 @@ targets:
     type: application
     platform: iOS
     sources:
-      - path: DroneWatch
+      - path: .
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.sergey1287.DroneWatch
