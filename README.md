@@ -1,25 +1,40 @@
-# DroneWatch MVP — iPhone
+# DroneWatch Connected — Safari iPhone 16
 
-SwiftUI starter application with a map, radar-style display, event log, settings, location permission handling, local event persistence, and local test notifications.
+Веб-клиент + отдельный серверный адаптер официальных публикаций.
 
-## Current status
-- This archive contains source code and build configuration, not an installed iPhone app.
-- No official live data provider is connected yet.
-- Demo entries are not real alerts or detections.
-- An iPhone alone cannot function as a radar or guarantee UAV detection at 5 km.
+## Что действительно подключается
+- Франция: публичный список FR-Alert (`https://www.fr-alert.gouv.fr/les-alertes`). Это общие оповещения населению, не отдельный поток обнаружения БПЛА.
+- Россия: RSS оперативной информации МЧС (`https://mchs.gov.ru/deyatelnost/press-centr/operativnaya-informaciya/rss`), с фильтром по словам, связанным с БПЛА/воздушной угрозой. Это не полный национальный realtime API и не гарантированно полный список региональных предупреждений.
 
-## Build with GitHub Actions
-The workflow at `.github/workflows/ios-build.yml` runs an iOS Simulator build on pushes and pull requests. It uses a GitHub-hosted macOS runner.
+Ни один из этих источников не является датчиком БПЛА. Если официальный сайт отвечает, но совпадающих публикаций нет, интерфейс показывает ноль результатов и не трактует это как отсутствие угрозы. Координаты не выводятся из названия/текста и показываются только если источник их действительно отдаёт.
 
-## Build locally on a Mac
-Install Xcode and XcodeGen, then run:
+## Файлы
+- `index.html`, `styles.css`, `app.js`, `manifest.webmanifest`, `sw.js`, `icons/icon.svg` — PWA-клиент.
+- `worker/worker.js` — Cloudflare Worker, который получает публичные официальные страницы и отдаёт `/api/alerts` + `/api/health`.
 
-    brew install xcodegen
-    xcodegen generate
-    xcodebuild -project DroneWatch.xcodeproj -scheme DroneWatch -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO build
+## Развёртывание без компьютера
+### 1. Опубликовать сайт через GitHub Pages
+1. В Safari создай публичный репозиторий GitHub `DroneWatchWeb` (или используй существующий репозиторий, но не смешивай с native Swift-проектом).
+2. Загрузи содержимое корня архива: `index.html`, `styles.css`, `app.js`, `manifest.webmanifest`, `sw.js`, `icons/icon.svg`. Не обязательно загружать `worker/` в корень Pages.
+3. В Settings → Pages выбери `Deploy from a branch`, ветка `main`, папка `/(root)`, нажми Save.
+4. После успешного workflow открой `https://<логин>.github.io/DroneWatchWeb/`.
 
-## Source files
-Swift files are in `DroneWatch/`. `project.yml` defines the iOS app target and location usage description.
+### 2. Опубликовать адаптер источников на Cloudflare Workers
+1. В Safari открой `https://dash.cloudflare.com/` и войди/создай аккаунт.
+2. Workers & Pages → Create → Worker → Deploy.
+3. Открой Edit code и замени пример полностью содержимым `worker/worker.js` из архива. Сохрани и Deploy.
+4. Скопируй выданный HTTPS URL вида `https://<worker-name>.<account>.workers.dev`.
+5. Проверь `https://<worker-name>.<account>.workers.dev/api/health` и `.../api/alerts`. Ответ должен быть JSON, а у каждого источника будет `ok: true/false`.
+6. Открой опубликованный сайт DroneWatch в Safari → Настройки → вставь Worker URL → «Сохранить и проверить».
 
-## Data-source limitation
-The provider adapter is intentionally unconfigured. Before adding automatic warnings, verify an official, documented and permitted feed, its schema and update frequency. Do not treat airspace notices as proof of physical UAV presence.
+Если Worker показывает ошибку одного источника, этот канал будет помечен ошибкой; не считать данные полными. Если сайт-источник меняет разметку, потребуется обновить парсер. Worker делает запрос к страницам при открытии `/api/alerts`; это не фоновая система круглосуточного мониторинга и не push-рассылка.
+
+### 3. Добавить на экран «Домой»
+В Safari открой сайт → Поделиться → На экран Домой → Добавить.
+
+## Ограничения и безопасность
+- Используй FR-Alert, МЧС, SMS/Cell Broadcast и местные официальные системы оповещения как первичные каналы; DroneWatch только дополняет их.
+- Данные страниц могут запаздывать; ни один источник здесь не обещает гарантированную доставку или полный охват.
+- Этот прототип не является системой обнаружения физических БПЛА и не обеспечивает гарантированную тревожную доставку.
+- Карта OpenStreetMap и библиотека Leaflet требуют интернет-соединения.
+- Журнал локальных записей хранится в браузере Safari; полученные источники запрашиваются заново и не сохраняются как серверная история.
