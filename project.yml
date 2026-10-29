@@ -1,0 +1,19 @@
+name: DroneWatch
+options:
+  bundleIdPrefix: com.sergey1287
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  DroneWatch:
+    type: application
+    platform: iOS
+    sources:
+      - path: DroneWatch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sergey1287.DroneWatch
+        PRODUCT_NAME: DroneWatch
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Показывать ваше местоположение на карте DroneWatch."
+        GENERATE_INFOPLIST_FILE: YES

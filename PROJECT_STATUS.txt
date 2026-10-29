@@ -1,0 +1,3 @@
+DroneWatch MVP source starter
+Status: source files created; not compiled or installed on a device.
+No official live feed is wired in yet. SourceAdapter is intentionally unconfigured until access is verified.
